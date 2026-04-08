@@ -35,12 +35,12 @@ Users browse their documents, filter/sort results, search by title/description/t
 
 ### User Story 3 - Share, Edit Metadata, Delete (Priority: P2)
 
-Owners can share with users/teams, edit metadata, replace file, and delete their documents. Project Managers can manage project documents.
+Owners can share with users/teams, edit metadata, replace file, and delete their documents. Sharing grants access only to the specified users/teams (no project membership change). Project Managers can manage project documents.
 
 **Independent Test**: Owner shares document with another user; recipient sees notification and "Shared with Me" entry.
 
 **Acceptance Scenarios**:
-1. **Given** a document owner, **When** they share with a user, **Then** recipient receives in-app notification and can access the document (subject to permissions).
+1. **Given** a document owner, **When** they share with a user, **Then** recipient receives in-app notification and can access the document (subject to permissions), but does not gain project membership or broader access.
 2. **Given** a document owner, **When** they delete a document and confirm, **Then** file and metadata are permanently removed.
 
 ---
@@ -101,7 +101,11 @@ Owners can share with users/teams, edit metadata, replace file, and delete their
 - Storage path pattern: `{userId}/{projectId or "personal"}/{guid}.{ext}` and stored outside `wwwroot` (e.g., `AppData/uploads`).
 - Preview available for PDF and images; Office document preview is out-of-scope for this release.
 
-## Questions for the team (Clarifications)
+## Clarifications
+
+### Session 2026-04-08
+- Q: When sharing a document, does the recipient become a project member or only get access to the document?  
+	→ A: Only gets access to the document (no project membership change).
 
 ### Q1: Malware scanning approach (RESOLVED)
 
@@ -109,5 +113,5 @@ Choice recorded: **A — mock/stub scanner**. Training implementation will use a
 
 ## READY FOR PLANNING
 
-This spec is ready for planning following the recorded clarification for malware scanning.
+This spec is ready for planning following the recorded clarifications.
 
