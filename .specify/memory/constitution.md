@@ -1,50 +1,97 @@
-# [PROJECT_NAME] Constitution
-<!-- Example: Spec Constitution, TaskFlow Constitution, etc. -->
+<!--
+Sync Impact Report
+
+Version change: template -> 1.0.0
+
+Modified principles:
+- [PRINCIPLE_1_NAME] -> Training & Offline-First
+- [PRINCIPLE_2_NAME] -> Security & Authorization (IDOR Prevention)
+- [PRINCIPLE_3_NAME] -> Test-First Quality
+- [PRINCIPLE_4_NAME] -> Abstraction & Cloud Migration
+- [PRINCIPLE_5_NAME] -> Simplicity & Observability
+
+Added sections:
+- Constraints & Standards
+- Development Workflow
+
+Removed sections: none
+
+Templates requiring review: 
+- .specify/templates/plan-template.md ⚠ pending review for "Constitution Check" alignment
+- .specify/templates/spec-template.md ⚠ pending review for mandatory requirements language
+- .specify/templates/tasks-template.md ⚠ pending review for task gating based on constitution
+- .specify/templates/constitution-template.md ✅ used as source
+
+Follow-up TODOs:
+- TODO(RATIFICATION_DATE): Original ratification date unknown — please supply or approve as part of first commit
+-->
+
+# ContosoDashboard Constitution
 
 ## Core Principles
 
-### [PRINCIPLE_1_NAME]
-<!-- Example: I. Library-First -->
-[PRINCIPLE_1_DESCRIPTION]
-<!-- Example: Every feature starts as a standalone library; Libraries must be self-contained, independently testable, documented; Clear purpose required - no organizational-only libraries -->
+### Training & Offline-First (NON-NEGOTIABLE)
+The project MUST remain a training-first, offline-capable application. All development and feature work
+MUST support running without cloud services by default (local DB, local file storage, mock auth).
+Rationale: preserves reproducible training environment, reduces external dependency friction, and ensures
+students can run the system locally without cloud accounts.
 
-### [PRINCIPLE_2_NAME]
-<!-- Example: II. CLI Interface -->
-[PRINCIPLE_2_DESCRIPTION]
-<!-- Example: Every library exposes functionality via CLI; Text in/out protocol: stdin/args → stdout, errors → stderr; Support JSON + human-readable formats -->
+### Security & Authorization (IDOR Prevention)
+All data access paths and resources MUST enforce authorization checks at the service layer. Any endpoint
+serving files or project resources MUST validate membership/permissions before returning content. Files
+MUST be stored outside web-root and served via authorized endpoints.
+Rationale: prevents Insecure Direct Object Reference (IDOR) and enforces least-privilege access.
 
-### [PRINCIPLE_3_NAME]
-<!-- Example: III. Test-First (NON-NEGOTIABLE) -->
-[PRINCIPLE_3_DESCRIPTION]
-<!-- Example: TDD mandatory: Tests written → User approved → Tests fail → Then implement; Red-Green-Refactor cycle strictly enforced -->
+### Test-First Quality (STRONG RECOMMENDATION FOR CRITICAL PATHS)
+Critical behaviors (authentication, authorization, file storage, and data migrations) MUST have automated
+tests (unit + integration/contract tests). Tests for new user stories SHOULD be authored before implementation
+where practical and included in every PR that modifies behavior.
+Rationale: ensures regressions are detected early and educates students in test-driven practices.
 
-### [PRINCIPLE_4_NAME]
-<!-- Example: IV. Integration Testing -->
-[PRINCIPLE_4_DESCRIPTION]
-<!-- Example: Focus areas requiring integration tests: New library contract tests, Contract changes, Inter-service communication, Shared schemas -->
+### Abstraction & Cloud Migration (DESIGN CONSTRAINT)
+Infrastructure dependencies (file storage, database, external services) MUST be accessed through
+interface abstractions (e.g., `IFileStorageService`). Local implementations are required for training,
+but swapping to cloud implementations (Azure Blob, Azure SQL) MUST NOT require changes to business logic.
+Rationale: teaches dependency inversion and enables easy production migration.
 
-### [PRINCIPLE_5_NAME]
-<!-- Example: V. Observability, VI. Versioning & Breaking Changes, VII. Simplicity -->
-[PRINCIPLE_5_DESCRIPTION]
-<!-- Example: Text I/O ensures debuggability; Structured logging required; Or: MAJOR.MINOR.BUILD format; Or: Start simple, YAGNI principles -->
+### Simplicity & Observability
+Favor simple, explicit solutions over speculative generality (YAGNI). Instrument critical flows with structured
+logs and meaningful metrics. Logging MUST include context (user id, request id, project id) for security and debugging.
+Rationale: keeps the codebase approachable for learners while enabling effective troubleshooting.
 
-## [SECTION_2_NAME]
-<!-- Example: Additional Constraints, Security Requirements, Performance Standards, etc. -->
+## Constraints & Standards
 
-[SECTION_2_CONTENT]
-<!-- Example: Technology stack requirements, compliance standards, deployment policies, etc. -->
+- **Technology**: ASP.NET Core 8.0, Blazor Server, Entity Framework Core, SQL Server LocalDB for training
+- **Storage**: Local filesystem for uploaded files (outside `wwwroot`) with `IFileStorageService` abstraction
+- **File upload limits**: 25 MB per file (feature guidance); block unsupported MIME types and scan for malware
+- **Data model**: `DocumentId` integer keys; `FileType` supports 255 chars; `Category` stored as text
+- **Performance goals**: list pages/search should respond within 2s for typical training datasets
+- **Security**: mock authentication for training only — production must use proper identity providers
 
-## [SECTION_3_NAME]
-<!-- Example: Development Workflow, Review Process, Quality Gates, etc. -->
+## Development Workflow
 
-[SECTION_3_CONTENT]
-<!-- Example: Code review requirements, testing gates, deployment approval process, etc. -->
+- All substantive changes MUST be made via PRs and include a short migration plan if they change data schemas.
+- PRs that modify critical security behavior or storage MUST include tests and at least two reviewers,
+	one of whom is a repository maintainer.
+- The repository's CI pipeline MUST run unit and integration tests; PRs must pass CI before merge.
+- The `Constitution Check` in plans (see `.specify/templates/plan-template.md`) MUST be completed before
+	Phase 0 research is approved.
 
 ## Governance
-<!-- Example: Constitution supersedes all other practices; Amendments require documentation, approval, migration plan -->
 
-[GOVERNANCE_RULES]
-<!-- Example: All PRs/reviews must verify compliance; Complexity must be justified; Use [GUIDANCE_FILE] for runtime development guidance -->
+Amendments to this constitution require a documented PR with the following:
 
-**Version**: [CONSTITUTION_VERSION] | **Ratified**: [RATIFICATION_DATE] | **Last Amended**: [LAST_AMENDED_DATE]
-<!-- Example: Version: 2.1.1 | Ratified: 2025-06-13 | Last Amended: 2025-07-16 -->
+- **Proposal**: Describe the change, rationale, and migration/rollout plan for any breaking behavior.
+- **Review**: At least **two approvals**, including one repository maintainer (or designated steward).
+- **Versioning**: Use semantic versioning for the constitution:
+	- MAJOR: Breaking governance or principle removals/renames
+	- MINOR: New principle added or material expansion of guidance
+	- PATCH: Clarifications, wording fixes, or typo corrections
+- **Migration**: Any MAJOR or MINOR change MUST include a migration checklist and test plan demonstrating
+	how to remediate projects that violate the new rules.
+
+Compliance expectations: PR authors MUST call out relevant principles in their PR description (e.g., "Conforms
+to: Security & Authorization; Abstraction & Cloud Migration"). Reviewers should verify tests and CI coverage.
+
+**Version**: 1.0.0 | **Ratified**: TODO(RATIFICATION_DATE): original ratification date unknown | **Last Amended**: 2026-04-08
+
