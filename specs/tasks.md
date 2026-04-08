@@ -21,6 +21,9 @@
 - [ ] T014 Validate file type, size, and scan with mock malware scanner
 - [ ] T015 Persist metadata and file, show success/error messages
 - [ ] T016 Add unit/integration tests for upload flow and validation
+- [ ] T012 Implement DocumentController POST /api/documents endpoint in ContosoDashboard/Controllers/DocumentController.cs
+  - Depends on: T011 (DocumentService)
+  - Note: Include comprehensive error handling for file size limits and unsupported types
 
 ## Phase 4: User Story 2 - Browse, Search & Preview (P1)
 - [ ] T017 Add document list/table to Pages/Documents.razor
