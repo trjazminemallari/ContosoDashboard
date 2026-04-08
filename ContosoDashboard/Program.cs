@@ -13,9 +13,10 @@ builder.Services.AddServerSideBlazor();
 // Add authentication state provider for Blazor
 builder.Services.AddScoped<AuthenticationStateProvider, CustomAuthenticationStateProvider>();
 
-// Configure Database
+// Configure Database (MySQL using Pomelo)
+var defaultConn = builder.Configuration.GetConnectionString("DefaultConnection");
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+    options.UseMySql(defaultConn, ServerVersion.AutoDetect(defaultConn)));
 
 // Configure Mock Authentication (Cookie-based for training purposes)
 builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
