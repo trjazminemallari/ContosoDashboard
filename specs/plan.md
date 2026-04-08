@@ -1,0 +1,3 @@
+# Implementation Plan: Document Upload & Management
+
+...existing code from add-document-management/plan.md...
