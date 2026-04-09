@@ -17,10 +17,23 @@ public class ApplicationDbContext : DbContext
     public DbSet<Notification> Notifications { get; set; } = null!;
     public DbSet<ProjectMember> ProjectMembers { get; set; } = null!;
     public DbSet<Announcement> Announcements { get; set; } = null!;
+    public DbSet<Document> Documents { get; set; } = null!;
+    public DbSet<DocumentShare> DocumentShares { get; set; } = null!;
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
+
+        // Document relationships
+        modelBuilder.Entity<Document>()
+            .HasKey(d => d.DocumentId);
+        modelBuilder.Entity<DocumentShare>()
+            .HasKey(ds => new { ds.DocumentId, ds.SharedWithUserId });
+        modelBuilder.Entity<DocumentShare>()
+            .HasOne<Document>()
+            .WithMany()
+            .HasForeignKey(ds => ds.DocumentId)
+            .OnDelete(DeleteBehavior.Cascade);
 
         // Configure User relationships
         modelBuilder.Entity<User>()

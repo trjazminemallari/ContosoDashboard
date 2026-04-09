@@ -1,3 +1,0 @@
-# Feature Specification: Document Upload & Management
-
-...existing code from add-document-management/spec.md...

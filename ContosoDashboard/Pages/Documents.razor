@@ -1,0 +1,175 @@
+@page "/documents"
+@using ContosoDashboard.Models
+@using ContosoDashboard.Services
+@inject DocumentService DocumentService
+@inject NavigationManager Navigation
+
+
+<h3>Documents</h3>
+
+<button class="btn btn-primary" @onclick="ShowUploadModal">Upload Document</button>
+
+<div class="row mt-3 mb-2">
+    <div class="col-md-3">
+        <input class="form-control" placeholder="Search..." @bind="searchTerm" @bind:event="oninput" />
+    </div>
+    <div class="col-md-3">
+        <input class="form-control" placeholder="Category" @bind="filterCategory" @bind:event="oninput" />
+    </div>
+    <div class="col-md-3">
+        <input class="form-control" placeholder="Uploader" @bind="filterUploader" @bind:event="oninput" />
+    </div>
+</div>
+
+<table class="table table-striped">
+    <thead>
+        <tr>
+            <th @onclick="() => SortBy(nameof(Document.Title))">Title</th>
+            <th @onclick="() => SortBy(nameof(Document.Category))">Category</th>
+            <th @onclick="() => SortBy(nameof(Document.UploadDate))">Upload Date</th>
+            <th @onclick="() => SortBy(nameof(Document.FileSize))">Size</th>
+            <th>Uploader</th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var doc in FilteredDocuments)
+        {
+            <tr>
+                <td>@doc.Title</td>
+                <td>@doc.Category</td>
+                <td>@doc.UploadDate.ToString("g")</td>
+                <td>@doc.FileSize / 1024.0:F1 KB</td>
+                <td>@doc.UploadedBy</td>
+                <td>
+                    <button class="btn btn-link" @onclick="() => PreviewDocument(doc)">Preview</button>
+                    <a class="btn btn-link" href="/api/document/download/@doc.DocumentId" target="_blank">Download</a>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+@if (showPreviewModal && previewDoc != null)
+{
+    <div class="modal show d-block" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Preview: @previewDoc.Title</h5>
+                    <button type="button" class="btn-close" @onclick="HidePreviewModal"></button>
+                </div>
+                <div class="modal-body">
+                    <iframe src="/api/document/preview/@previewDoc.DocumentId" width="100%" height="500px"></iframe>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@if (showUploadModal)
+{
+    <div class="modal show d-block" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Upload Document</h5>
+                    <button type="button" class="btn-close" @onclick="HideUploadModal"></button>
+                </div>
+                <div class="modal-body">
+                    <EditForm Model="uploadModel" OnValidSubmit="HandleUpload">
+                        <InputText @bind-Value="uploadModel.Title" class="form-control" placeholder="Title" />
+                        <InputTextArea @bind-Value="uploadModel.Description" class="form-control mt-2" placeholder="Description" />
+                        <InputText @bind-Value="uploadModel.Category" class="form-control mt-2" placeholder="Category" />
+                        <InputText @bind-Value="uploadModel.OriginalFileName" class="form-control mt-2" placeholder="Original File Name" />
+                        <InputFile OnChange="OnFileSelected" class="form-control mt-2" />
+                        <button type="submit" class="btn btn-success mt-3">Upload</button>
+                    </EditForm>
+                    @if (!string.IsNullOrEmpty(uploadError))
+                    {
+                        <div class="alert alert-danger mt-2">@uploadError</div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    private bool showUploadModal = false;
+    private bool showPreviewModal = false;
+    private Document? previewDoc;
+    private Document uploadModel = new();
+    private Stream? fileStream;
+    private string? uploadError;
+    private string searchTerm = string.Empty;
+    private string filterCategory = string.Empty;
+    private string filterUploader = string.Empty;
+    private string sortColumn = nameof(Document.UploadDate);
+    private bool sortAsc = false;
+    private List<Document> documents = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        // TODO: Replace with actual user ID from auth
+        documents = await DocumentService.GetAllDocumentsForUserAsync(1);
+    }
+
+    private IEnumerable<Document> FilteredDocuments => documents
+        .Where(d => (string.IsNullOrEmpty(searchTerm) || d.Title.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) || (d.Description?.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ?? false))
+            && (string.IsNullOrEmpty(filterCategory) || d.Category.Equals(filterCategory, StringComparison.OrdinalIgnoreCase))
+            && (string.IsNullOrEmpty(filterUploader) || d.UploadedBy.ToString() == filterUploader))
+        .OrderBy<Document, object>(d =>
+            sortColumn == nameof(Document.Title) ? d.Title as object :
+            sortColumn == nameof(Document.Category) ? d.Category as object :
+            sortColumn == nameof(Document.UploadDate) ? d.UploadDate as object :
+            sortColumn == nameof(Document.FileSize) ? d.FileSize as object : d.UploadDate as object)
+        .ThenBy(d => d.DocumentId);
+
+    private void SortBy(string column)
+    {
+        if (sortColumn == column)
+            sortAsc = !sortAsc;
+        else
+            sortColumn = column;
+    }
+
+    private void ShowUploadModal() => showUploadModal = true;
+    private void HideUploadModal() { showUploadModal = false; uploadError = null; }
+    private void PreviewDocument(Document doc) { previewDoc = doc; showPreviewModal = true; }
+    private void HidePreviewModal() { showPreviewModal = false; previewDoc = null; }
+
+    private async Task OnFileSelected(InputFileChangeEventArgs e)
+    {
+        var file = e.File;
+        uploadModel.OriginalFileName = file.Name;
+        uploadModel.FileType = file.ContentType;
+        uploadModel.FileSize = (int)file.Size;
+        var ms = new MemoryStream();
+        await file.OpenReadStream(25 * 1024 * 1024).CopyToAsync(ms);
+        ms.Position = 0;
+        fileStream = ms;
+    }
+
+    private async Task HandleUpload()
+    {
+        if (fileStream == null)
+        {
+            uploadError = "Please select a file.";
+            return;
+        }
+        try
+        {
+            uploadModel.UploadedBy = 1; // TODO: Replace with actual user ID from auth
+            uploadModel.StoredFilePath = Guid.NewGuid() + Path.GetExtension(uploadModel.OriginalFileName);
+            await DocumentService.UploadDocumentAsync(uploadModel, fileStream);
+            HideUploadModal();
+            Navigation.NavigateTo(Navigation.Uri, forceLoad: true);
+        }
+        catch (Exception ex)
+        {
+            uploadError = ex.Message;
+        }
+    }
+}
+
