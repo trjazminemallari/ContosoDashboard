@@ -1,10 +1,84 @@
+
 # Feature Specification: Document Upload & Management
 
 ## Overview
 
 Contoso Corporation needs to add document upload and management capabilities to the ContosoDashboard application. This feature will enable employees to upload work-related documents, organize them by category and project, and share them with team members.
 
-## Business Need
+## User Scenarios & Testing *(mandatory)*
+
+### Scenario 1: Uploading a Document
+*Given* a logged-in user on the Documents page,
+*When* the user selects a valid file and fills in required metadata,
+*Then* the file is uploaded, scanned, and appears in their "My Documents" list with correct metadata.
+
+### Scenario 2: Upload Fails Due to Size
+*Given* a user selects a file larger than 25 MB,
+*When* they attempt to upload,
+*Then* the system rejects the file and displays a clear error message.
+
+### Scenario 3: Sharing a Document
+*Given* a user owns a document,
+*When* they share it with another user,
+*Then* the recipient sees the document in "Shared with Me" and receives a notification.
+
+### Scenario 4: Project Document Access
+*Given* a project member views a project,
+*When* documents are associated with that project,
+*Then* all project members can view and download those documents.
+
+### Scenario 5: Search and Filter
+*Given* a user on the Documents page,
+*When* they use search or filters,
+*Then* only documents they have access to are shown, and results appear within 2 seconds.
+
+### Scenario 6: Delete Document
+*Given* a user owns a document,
+*When* they delete it and confirm,
+*Then* the document is permanently removed and no longer accessible.
+
+---
+
+## Requirements *(mandatory)*
+
+### Functional Requirements
+
+- Users can upload one or more files (PDF, Office docs, text, images) up to 25 MB each
+- Users must provide title, category, and may add description, tags, and project association
+- System scans files for malware (mock/stub)
+- Uploaded files are stored securely outside wwwroot
+- Users can view, search, sort, and filter their documents
+- Project members can access project documents
+- Users can share documents with individuals or teams
+- Recipients are notified of shared documents
+- Users can edit metadata and replace files
+- Users can delete their own documents; project managers can delete any in their projects
+- All document actions are logged for audit
+
+### Non-Functional Requirements
+
+- Upload completes within 30 seconds for 25 MB files
+- Document list/search loads within 2 seconds (≤500 docs)
+- Preview loads within 3 seconds for supported types
+- Must work offline (local storage, no cloud)
+- Must use interface abstraction for storage (IFileStorageService)
+- Must comply with mock authentication and authorization
+
+---
+
+## Success Criteria *(mandatory)*
+
+- 70% of active users upload at least one document within 3 months
+- Average time to locate a document is under 30 seconds
+- 90% of uploaded documents are properly categorized
+- Zero security incidents related to document access
+- All acceptance scenarios above are testable and pass in manual/automated testing
+
+---
+
+## Additional Details
+
+### Business Need
 
 Currently, Contoso employees store work documents in various locations (local drives, email attachments, shared drives), leading to:
 
@@ -14,7 +88,7 @@ Currently, Contoso employees store work documents in various locations (local dr
 
 The document upload and management feature addresses these issues by providing a centralized, secure location for work-related documents within the dashboard application that employees already use daily.
 
-## Target Users
+### Target Users
 
 All Contoso employees who use the ContosoDashboard application will have access to document management features, with permissions based on their existing roles:
 
@@ -23,7 +97,9 @@ All Contoso employees who use the ContosoDashboard application will have access 
 - **Project Managers**: Upload documents and manage all documents associated with their projects
 - **Administrators**: Full access to all documents for audit and compliance purposes
 
-## Core Requirements
+---
+
+## Implementation Notes
 
 ### 1. Document Upload
 
